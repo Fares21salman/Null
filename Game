@@ -1,0 +1,149 @@
+#Snake game 
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the game window
+window_width, window_height = 800, 600
+window = pygame.display.set_mode((window_width, window_height))
+pygame.display.set_caption("Snake Game")
+
+# Set up colors
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 0, 0)
+
+# Set up the game clock
+clock = pygame.time.Clock()
+
+# Set up the snake initial position and properties
+snake_block_size = 20
+snake_speed = 15
+
+font_style = pygame.font.SysFont(0, 50)
+score_font = pygame.font.SysFont(0, 35)
+
+
+def draw_snake(snake_block_size, snake_list):
+    for snake_part in snake_list:
+        pygame.draw.rect(window, black, [snake_part[0], snake_part[1], snake_block_size, snake_block_size])
+
+
+def display_score(score):
+    text = score_font.render("Score: " + str(score), True, black)
+    window.blit(text, [10, 10])
+
+
+def game_loop():
+    game_over = False
+    game_quit = False
+
+    # Set up the snake initial position and direction
+    x1 = window_width / 2
+    y1 = window_height / 2
+    x1_change = 0
+    y1_change = 0
+
+    snake_list = []
+    snake_length = 1
+
+    # Set up the food position
+    food_x = round(random.randrange(0, window_width - snake_block_size) / snake_block_size) * snake_block_size
+    food_y = round(random.randrange(0, window_height - snake_block_size) / snake_block_size) * snake_block_size
+
+    # Game loop
+    while not game_quit:
+        while game_over:
+            window.fill(white)
+            game_over_text = font_style.render("Game Over!", True, red)
+            window.blit(game_over_text, [window_width / 2 - 100, window_height / 2 - 50])
+            display_score(snake_length - 1)
+            pygame.display.update()
+
+            # Ask the player to play again or quit
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game_quit = True
+                    game_over = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_quit = True
+                        game_over = False
+                    if event.key == pygame.K_r:
+                        game_loop()
+
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_quit = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    x1_change = -snake_block_size
+                    y1_change = 0
+                elif event.key == pygame.K_RIGHT:
+                    x1_change = snake_block_size
+                    y1_change = 0
+                elif event.key == pygame.K_UP:
+                    y1_change = -snake_block_size
+                    x1_change = 0
+                elif event.key == pygame.K_DOWN:
+                    y1_change = snake_block_size
+                    x1_change = 0
+
+        # Check if the snake hits the boundaries
+        if x1 >= window_width:
+            x1 = 0
+        elif x1 < 0:
+            x1 = window_width - snake_block_size
+
+        if y1 >= window_height:
+            y1 = 0
+        elif y1 < 0:
+            y1 = window_height - snake_block_size
+
+        # Check if the snake's head hits the top or bottom boundaries
+        if y1 >= window_height:
+            y1 = 0
+        elif y1 < 0:
+            y1 = window_height - snake_block_size
+
+        # Update the snake position
+        x1 += x1_change
+        y1 += y1_change
+
+        window.fill(white)
+        pygame.draw.rect(window, red, [food_x, food_y, snake_block_size, snake_block_size])
+        snake_head = [x1, y1]
+        snake_list.append(snake_head)
+
+        # Remove the tail if the snake length exceeds its maximum
+        if len(snake_list) > snake_length:
+            del snake_list[0]
+
+        # Check if the snake hits itself
+        for snake_part in snake_list[:-1]:
+            if snake_part == snake_head:
+                game_over = True
+
+        draw_snake(snake_block_size, snake_list)
+        display_score(snake_length - 1)
+
+        pygame.display.update()
+
+        # Check if the snake eats the food
+        if x1 == food_x and y1 == food_y:
+            food_x = round(random.randrange(0, window_width - snake_block_size) / snake_block_size) * snake_block_size
+            food_y = round(random.randrange(0, window_height - snake_block_size) / snake_block_size) * snake_block_size
+            snake_length += 1
+
+        # Set the game speed
+        clock.tick(snake_speed)
+
+    # Quit the game
+    pygame.quit()
+
+
+# Start the game loop
+game_loop()
